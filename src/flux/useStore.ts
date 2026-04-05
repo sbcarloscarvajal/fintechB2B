@@ -1,45 +1,37 @@
 import { useSyncExternalStore, useCallback } from "react";
 import { invoiceStore } from "./invoiceStore";
+import type { InvoiceStoreState, ProviderStoreState, WizardStoreState, AssignmentStoreState, PayerStoreState, Invoice } from "./invoiceStore";
 
-export function useInvoiceStore() {
-  const subscribe = useCallback((listener: () => void) => {
+function useStoreSubscribe() {
+  return useCallback((listener: () => void) => {
     invoiceStore.addListener(listener);
     return () => invoiceStore.removeListener(listener);
   }, []);
-
-  const state = useSyncExternalStore(subscribe, () => invoiceStore.getState());
-  const filteredInvoices = useSyncExternalStore(subscribe, () => invoiceStore.getFilteredInvoices());
-  const selectedInvoice = useSyncExternalStore(subscribe, () => invoiceStore.getSelectedInvoice());
-
-  return { state, filteredInvoices, selectedInvoice };
 }
 
-export function useProviderStore() {
-  const subscribe = useCallback((listener: () => void) => {
-    invoiceStore.addListener(listener);
-    return () => invoiceStore.removeListener(listener);
-  }, []);
+export function useInvoiceStore(): InvoiceStoreState {
+  const subscribe = useStoreSubscribe();
+  return useSyncExternalStore(subscribe, () => invoiceStore.getInvoiceState());
+}
 
+export function useProviderStore(): ProviderStoreState {
+  const subscribe = useStoreSubscribe();
   return useSyncExternalStore(subscribe, () => invoiceStore.getProviderState());
 }
 
-export function useWizardStore() {
-  const subscribe = useCallback((listener: () => void) => {
-    invoiceStore.addListener(listener);
-    return () => invoiceStore.removeListener(listener);
-  }, []);
-
+export function useWizardStore(): { state: WizardStoreState; selectedInvoice: Invoice | null } {
+  const subscribe = useStoreSubscribe();
   const state = useSyncExternalStore(subscribe, () => invoiceStore.getWizardState());
   const selectedInvoice = useSyncExternalStore(subscribe, () => invoiceStore.getWizardSelectedInvoice());
-
   return { state, selectedInvoice };
 }
 
-export function useAssignmentStore() {
-  const subscribe = useCallback((listener: () => void) => {
-    invoiceStore.addListener(listener);
-    return () => invoiceStore.removeListener(listener);
-  }, []);
-
+export function useAssignmentStore(): AssignmentStoreState {
+  const subscribe = useStoreSubscribe();
   return useSyncExternalStore(subscribe, () => invoiceStore.getAssignmentState());
+}
+
+export function usePayerStore(): PayerStoreState {
+  const subscribe = useStoreSubscribe();
+  return useSyncExternalStore(subscribe, () => invoiceStore.getPayerState());
 }

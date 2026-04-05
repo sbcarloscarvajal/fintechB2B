@@ -26,6 +26,8 @@ export interface InvoiceStoreState {
   invoices: Invoice[];
   selectedInvoiceId: string | null;
   filter: "all" | "low" | "medium" | "high";
+  filteredInvoices: Invoice[];
+  selectedInvoice: Invoice | null;
 }
 
 export interface ProviderStoreState {
@@ -33,6 +35,7 @@ export interface ProviderStoreState {
   showError: boolean;
   isSigned: boolean;
   showAdditionalOptions: boolean;
+  isLoading: boolean;
 }
 
 export interface WizardStoreState {
@@ -41,105 +44,199 @@ export interface WizardStoreState {
   discountRate: string;
   acceptTerms: boolean;
   isComplete: boolean;
+  isLoading: boolean;
 }
 
 export interface AssignmentStoreState {
   isAccepted: boolean;
+  isLoading: boolean;
+}
+
+export interface PayerStoreState {
+  notifications: PayerNotification[];
+  selectedNotificationId: string | null;
+  isConfirming: boolean;
+  isLoading: boolean;
+}
+
+export interface PayerNotification {
+  id: string;
+  invoiceId: string;
+  provider: string;
+  factor: string;
+  amount: number;
+  dueDate: string;
+  status: "pending_ack" | "acknowledged" | "paid";
+  message: string;
 }
 
 type Listener = () => void;
 
 class InvoiceStore {
-  private state: InvoiceStoreState = {
-    invoices: mockInvoices,
-    selectedInvoiceId: null,
-    filter: "all",
-  };
-
-  private providerState: ProviderStoreState = {
-    isSubmitted: false,
-    showError: false,
-    isSigned: false,
-    showAdditionalOptions: false,
-  };
-
-  private wizardState: WizardStoreState = {
-    currentStep: 1,
-    selectedInvoiceId: null,
-    discountRate: "2.5",
-    acceptTerms: false,
-    isComplete: false,
-  };
-
-  private assignmentState: AssignmentStoreState = {
-    isAccepted: false,
-  };
-
+  private _invoiceState: InvoiceStoreState;
+  private _providerState: ProviderStoreState;
+  private _wizardState: WizardStoreState;
+  private _assignmentState: AssignmentStoreState;
+  private _payerState: PayerStoreState;
   private listeners: Set<Listener> = new Set();
 
   constructor() {
+    const filtered = mockInvoices;
+    this._invoiceState = {
+      invoices: mockInvoices,
+      selectedInvoiceId: null,
+      filter: "all",
+      filteredInvoices: filtered,
+      selectedInvoice: null,
+    };
+
+    this._providerState = {
+      isSubmitted: false,
+      showError: false,
+      isSigned: false,
+      showAdditionalOptions: false,
+      isLoading: false,
+    };
+
+    this._wizardState = {
+      currentStep: 1,
+      selectedInvoiceId: null,
+      discountRate: "2.5",
+      acceptTerms: false,
+      isComplete: false,
+      isLoading: false,
+    };
+
+    this._assignmentState = {
+      isAccepted: false,
+      isLoading: false,
+    };
+
+    this._payerState = {
+      notifications: [
+        { id: "N-01", invoiceId: "FE-01", provider: "TechCorp S.A.S", factor: "Banco Factoring XYZ S.A.", amount: 10000000, dueDate: "2026-04-14", status: "pending_ack", message: "Se ha cedido la factura FE-01 al factor Banco Factoring XYZ S.A. Debe confirmar la recepción." },
+        { id: "N-02", invoiceId: "FE-04", provider: "Comercial Sur", factor: "FinCapital S.A.", amount: 2000000, dueDate: "2026-04-09", status: "acknowledged", message: "Cesión confirmada. El pago debe realizarse al factor FinCapital S.A. antes del vencimiento." },
+        { id: "N-03", invoiceId: "FE-05", provider: "Logística Express", factor: "Banco Factoring XYZ S.A.", amount: 8500000, dueDate: "2026-04-21", status: "paid", message: "Pago confirmado exitosamente al factor." },
+      ],
+      selectedNotificationId: null,
+      isConfirming: false,
+      isLoading: false,
+    };
+
     AppDispatcher.register("invoiceStore", this.handleAction.bind(this));
+  }
+
+  private recomputeDerived() {
+    const { invoices, filter, selectedInvoiceId } = this._invoiceState;
+    const filteredInvoices = filter === "all" ? invoices : invoices.filter(inv => inv.risk === filter);
+    const selectedInvoice = invoices.find(inv => inv.id === selectedInvoiceId) || null;
+    this._invoiceState = { ...this._invoiceState, filteredInvoices, selectedInvoice };
   }
 
   private handleAction(action: FluxAction) {
     switch (action.type) {
       case ActionTypes.SELECT_INVOICE:
-        this.state = { ...this.state, selectedInvoiceId: action.payload };
+        this._invoiceState = { ...this._invoiceState, selectedInvoiceId: action.payload };
+        this.recomputeDerived();
         break;
       case ActionTypes.CLEAR_SELECTED_INVOICE:
-        this.state = { ...this.state, selectedInvoiceId: null };
+        this._invoiceState = { ...this._invoiceState, selectedInvoiceId: null };
+        this.recomputeDerived();
         break;
       case ActionTypes.SET_FILTER:
-        this.state = { ...this.state, filter: action.payload };
+        this._invoiceState = { ...this._invoiceState, filter: action.payload };
+        this.recomputeDerived();
         break;
+
       case ActionTypes.SUBMIT_OFFER:
-        if (!this.providerState.isSigned) {
-          this.providerState = { ...this.providerState, showError: true };
+        if (!this._providerState.isSigned) {
+          this._providerState = { ...this._providerState, showError: true };
           setTimeout(() => {
-            this.providerState = { ...this.providerState, showError: false };
+            this._providerState = { ...this._providerState, showError: false };
             this.emitChange();
           }, 5000);
         } else {
-          this.providerState = { ...this.providerState, isSubmitted: true };
+          this._providerState = { ...this._providerState, isLoading: true };
+          setTimeout(() => {
+            this._providerState = { ...this._providerState, isLoading: false, isSubmitted: true };
+            this.emitChange();
+          }, 1500);
         }
         break;
       case ActionTypes.RESET_OFFER:
-        this.providerState = { isSubmitted: false, showError: false, isSigned: false, showAdditionalOptions: false };
+        this._providerState = { isSubmitted: false, showError: false, isSigned: false, showAdditionalOptions: false, isLoading: false };
         break;
       case ActionTypes.TOGGLE_SIGNED:
-        this.providerState = { ...this.providerState, isSigned: action.payload };
+        this._providerState = { ...this._providerState, isSigned: action.payload };
         break;
       case ActionTypes.TOGGLE_ADDITIONAL_OPTIONS:
-        this.providerState = { ...this.providerState, showAdditionalOptions: !this.providerState.showAdditionalOptions };
+        this._providerState = { ...this._providerState, showAdditionalOptions: !this._providerState.showAdditionalOptions };
         break;
+
       case ActionTypes.WIZARD_NEXT:
-        if (this.wizardState.currentStep < 3)
-          this.wizardState = { ...this.wizardState, currentStep: this.wizardState.currentStep + 1 };
+        if (this._wizardState.currentStep < 3)
+          this._wizardState = { ...this._wizardState, currentStep: this._wizardState.currentStep + 1 };
         break;
       case ActionTypes.WIZARD_BACK:
-        if (this.wizardState.currentStep > 1)
-          this.wizardState = { ...this.wizardState, currentStep: this.wizardState.currentStep - 1 };
+        if (this._wizardState.currentStep > 1)
+          this._wizardState = { ...this._wizardState, currentStep: this._wizardState.currentStep - 1 };
         break;
       case ActionTypes.WIZARD_SELECT_INVOICE:
-        this.wizardState = { ...this.wizardState, selectedInvoiceId: action.payload };
+        this._wizardState = { ...this._wizardState, selectedInvoiceId: action.payload };
         break;
       case ActionTypes.WIZARD_SET_DISCOUNT:
-        this.wizardState = { ...this.wizardState, discountRate: action.payload };
+        this._wizardState = { ...this._wizardState, discountRate: action.payload };
         break;
       case ActionTypes.WIZARD_ACCEPT_TERMS:
-        this.wizardState = { ...this.wizardState, acceptTerms: action.payload };
+        this._wizardState = { ...this._wizardState, acceptTerms: action.payload };
         break;
       case ActionTypes.WIZARD_COMPLETE:
-        this.wizardState = { ...this.wizardState, isComplete: true };
+        this._wizardState = { ...this._wizardState, isLoading: true };
+        setTimeout(() => {
+          this._wizardState = { ...this._wizardState, isLoading: false, isComplete: true };
+          this.emitChange();
+        }, 1500);
         break;
       case ActionTypes.WIZARD_RESET:
-        this.wizardState = { currentStep: 1, selectedInvoiceId: null, discountRate: "2.5", acceptTerms: false, isComplete: false };
+        this._wizardState = { currentStep: 1, selectedInvoiceId: null, discountRate: "2.5", acceptTerms: false, isComplete: false, isLoading: false };
         break;
+
       case ActionTypes.ACCEPT_ASSIGNMENT:
-        this.assignmentState = { isAccepted: true };
+        this._assignmentState = { ...this._assignmentState, isLoading: true };
+        setTimeout(() => {
+          this._assignmentState = { isAccepted: true, isLoading: false };
+          this.emitChange();
+        }, 1500);
         break;
       case ActionTypes.RESET_ASSIGNMENT:
-        this.assignmentState = { isAccepted: false };
+        this._assignmentState = { isAccepted: false, isLoading: false };
+        break;
+
+      case ActionTypes.SELECT_PAYER_NOTIFICATION:
+        this._payerState = { ...this._payerState, selectedNotificationId: action.payload };
+        break;
+      case ActionTypes.CLEAR_PAYER_NOTIFICATION:
+        this._payerState = { ...this._payerState, selectedNotificationId: null };
+        break;
+      case ActionTypes.ACKNOWLEDGE_ASSIGNMENT:
+        this._payerState = { ...this._payerState, isLoading: true };
+        setTimeout(() => {
+          const notifications = this._payerState.notifications.map(n =>
+            n.id === action.payload ? { ...n, status: "acknowledged" as const, message: "Cesión confirmada. El pago debe realizarse al factor antes del vencimiento." } : n
+          );
+          this._payerState = { ...this._payerState, notifications, isLoading: false };
+          this.emitChange();
+        }, 1500);
+        break;
+      case ActionTypes.CONFIRM_PAYMENT:
+        this._payerState = { ...this._payerState, isLoading: true };
+        setTimeout(() => {
+          const notifications = this._payerState.notifications.map(n =>
+            n.id === action.payload ? { ...n, status: "paid" as const, message: "Pago confirmado exitosamente al factor." } : n
+          );
+          this._payerState = { ...this._payerState, notifications, isLoading: false };
+          this.emitChange();
+        }, 1500);
         break;
       default:
         return;
@@ -147,24 +244,15 @@ class InvoiceStore {
     this.emitChange();
   }
 
-  getState(): InvoiceStoreState { return this.state; }
-  getProviderState(): ProviderStoreState { return this.providerState; }
-  getWizardState(): WizardStoreState { return this.wizardState; }
-  getAssignmentState(): AssignmentStoreState { return this.assignmentState; }
-
-  getFilteredInvoices(): Invoice[] {
-    return this.state.filter === "all"
-      ? this.state.invoices
-      : this.state.invoices.filter(inv => inv.risk === this.state.filter);
-  }
-
-  getSelectedInvoice(): Invoice | null {
-    return this.state.invoices.find(inv => inv.id === this.state.selectedInvoiceId) || null;
-  }
+  getInvoiceState(): InvoiceStoreState { return this._invoiceState; }
+  getProviderState(): ProviderStoreState { return this._providerState; }
+  getWizardState(): WizardStoreState { return this._wizardState; }
+  getAssignmentState(): AssignmentStoreState { return this._assignmentState; }
+  getPayerState(): PayerStoreState { return this._payerState; }
 
   getWizardSelectedInvoice(): Invoice | null {
     const wizardInvoices = mockInvoices.slice(0, 3);
-    return wizardInvoices.find(inv => inv.id === this.wizardState.selectedInvoiceId) || null;
+    return wizardInvoices.find(inv => inv.id === this._wizardState.selectedInvoiceId) || null;
   }
 
   addListener(listener: Listener) { this.listeners.add(listener); }
