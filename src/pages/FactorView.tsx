@@ -1,13 +1,44 @@
-import { Search, Download, TrendingUp, AlertTriangle, CheckCircle2, Eye } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Search, Download, TrendingUp, AlertTriangle, CheckCircle2, Eye, Landmark } from "lucide-react";
 import { FintechButton } from "@/components/FintechButton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DianFeedback } from "@/components/DianFeedback";
-import { InvoiceActions } from "@/flux/actions";
-import { useInvoiceStore } from "@/flux/useStore";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { mockDianApi } from "@/api/mockDianApi";
+import { AssignmentActions, InvoiceActions } from "@/flux/actions";
+import { useAssignmentStore, useInvoiceStore } from "@/flux/useStore";
 import { formatCurrency, formatDate, getRiskText, getStatusText } from "@/lib/formatters";
+import { toast } from "sonner";
+import { useEffect, useRef } from "react";
 
 export function FactorView() {
-  const { filter, invoices, filteredInvoices, selectedInvoice } = useInvoiceStore();
+  const acceptAssignment = useMutation({
+    mutationFn: () => mockDianApi.acceptFactorAssignment(),
+    onMutate: () => AssignmentActions.submitPending(),
+    onSuccess: () => AssignmentActions.submitSuccess(),
+    onError: () => {
+      AssignmentActions.submitFail();
+      toast.error("No se pudo completar la operación", { description: "Intenta nuevamente." });
+    },
+  });
+
+  const { filter, searchQuery, invoices, filteredInvoices, selectedInvoice } = useInvoiceStore();
+  const { isAccepted, isLoading: assignmentLoading } = useAssignmentStore();
+  const prevAccepted = useRef(isAccepted);
+
+  useEffect(() => {
+    if (isAccepted && !prevAccepted.current) {
+      toast.success("Operación registrada", {
+        description: "Simulación de aceptación de cesión y desembolso completada (datos de prueba).",
+      });
+    }
+    prevAccepted.current = isAccepted;
+  }, [isAccepted]);
+
+  const closeDetail = () => {
+    AssignmentActions.reset();
+    InvoiceActions.clearSelectedInvoice();
+  };
 
   const stats = {
     total: invoices.length,
@@ -26,7 +57,9 @@ export function FactorView() {
     <div className="container mx-auto px-4 py-6 md:py-8">
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl mb-2 text-fintech-institutional">Dashboard Factor</h1>
-        <p className="text-sm text-muted-foreground">Gestión y análisis de facturas disponibles</p>
+        <p className="text-sm text-muted-foreground">
+          Resumen superior, filtros y tabla (jerarquía visual); navegación inferior en móvil según actividad sumativa.
+        </p>
       </div>
 
       {/* Stats */}
@@ -49,7 +82,13 @@ export function FactorView() {
         <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
           <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <input type="text" placeholder="Buscar por ID, proveedor o pagador..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background text-sm" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => InvoiceActions.setSearch(e.target.value)}
+              placeholder="Buscar por ID, proveedor o pagador..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background text-sm"
+            />
           </div>
           <div className="flex gap-2 flex-wrap">
             {([["all", "Todos"], ["low", "Bajo"], ["medium", "Medio"], ["high", "Alto"]] as const).map(([val, label]) => (
@@ -99,7 +138,7 @@ export function FactorView() {
                   <td className="p-2 md:p-3"><StatusBadge status={invoice.status}>{getStatusText(invoice.status)}</StatusBadge></td>
                   <td className="p-2 md:p-3 text-muted-foreground text-xs">{invoice.dianStatus}</td>
                   <td className="p-2 md:p-3">
-                    <button onClick={() => InvoiceActions.selectInvoice(invoice.id)} className="p-2 rounded text-fintech-institutional hover:bg-fintech-institutional hover:text-primary-foreground transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
+                    <button type="button" onClick={() => InvoiceActions.selectInvoice(invoice.id)} className="p-2 rounded text-fintech-institutional hover:bg-fintech-institutional hover:text-primary-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label={`Ver detalle ${invoice.id}`}>
                       <Eye className="size-4" />
                     </button>
                   </td>
@@ -112,8 +151,8 @@ export function FactorView() {
 
       {/* Detail Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center p-4 z-50" onClick={() => InvoiceActions.clearSelectedInvoice()}>
-          <div className="bg-card rounded-xl p-5 md:p-6 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center p-4 z-50" onClick={closeDetail}>
+          <div className="bg-card rounded-xl p-5 md:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl mb-4 text-fintech-institutional">Detalle Factura {selectedInvoice.id}</h3>
             <DianFeedback type="accepted" message={`Validada ante la DIAN. Estado: ${selectedInvoice.dianStatus}`} className="mb-4" />
             <div className="space-y-3 mb-6">
@@ -124,7 +163,34 @@ export function FactorView() {
                 <div className="flex-1"><p className="text-sm text-muted-foreground">Estado</p><div className="mt-1"><StatusBadge status={selectedInvoice.status}>{getStatusText(selectedInvoice.status)}</StatusBadge></div></div>
               </div>
             </div>
-            <FintechButton onClick={() => InvoiceActions.clearSelectedInvoice()} className="w-full">Cerrar</FintechButton>
+
+            <div className="border-t border-border pt-4 mb-4">
+              <div className="flex items-center gap-2 mb-2 text-fintech-institutional">
+                <Landmark className="size-5" />
+                <span className="font-medium">Simulación factor (Flux)</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                <code className="text-xs bg-muted px-1 rounded">useMutation</code> (TanStack Query) ejecuta la llamada simulada a DIAN/backend; al resolver, las acciones Flux actualizan el store y <code className="text-xs bg-muted px-1 rounded">useAssignmentStore</code> re-renderiza la vista.
+              </p>
+              {isAccepted ? (
+                <DianFeedback type="accepted" message="Cesión aceptada y desembolso simulado correctamente (prototipo)." />
+              ) : (
+                <FintechButton
+                  type="button"
+                  onClick={() => acceptAssignment.mutate()}
+                  disabled={assignmentLoading || acceptAssignment.isPending}
+                  className="w-full min-h-[44px]"
+                >
+                  {assignmentLoading || acceptAssignment.isPending ? (
+                    <LoadingSpinner size="sm" label="Procesando desembolso..." />
+                  ) : (
+                    <>Aceptar operación y simular desembolso</>
+                  )}
+                </FintechButton>
+              )}
+            </div>
+
+            <FintechButton onClick={closeDetail} variant="outline" className="w-full mt-2">Cerrar</FintechButton>
           </div>
         </div>
       )}

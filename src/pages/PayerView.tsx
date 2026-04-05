@@ -1,15 +1,35 @@
+import { useMutation } from "@tanstack/react-query";
 import { Bell, CheckCircle, DollarSign, Building2, Calendar, FileText, AlertTriangle } from "lucide-react";
 import { FintechButton } from "@/components/FintechButton";
 import { DianFeedback } from "@/components/DianFeedback";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { StatusBadge } from "@/components/StatusBadge";
+import { mockDianApi } from "@/api/mockDianApi";
 import { PayerActions } from "@/flux/actions";
 import { usePayerStore } from "@/flux/useStore";
 import { formatCurrency } from "@/lib/formatters";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 
+type PayerMutVars = { kind: "ack" | "pay"; id: string };
+
 export function PayerView() {
+  const payerOp = useMutation({
+    mutationFn: async (vars: PayerMutVars) => {
+      if (vars.kind === "ack") await mockDianApi.acknowledgePayerCession(vars.id);
+      else await mockDianApi.confirmPayerPaymentToFactor(vars.id);
+    },
+    onMutate: () => PayerActions.opPending(),
+    onSuccess: (_, vars) => {
+      if (vars.kind === "ack") PayerActions.ackSuccess(vars.id);
+      else PayerActions.paySuccess(vars.id);
+    },
+    onError: () => {
+      PayerActions.opReset();
+      toast.error("No se pudo completar la operación", { description: "Intenta de nuevo." });
+    },
+  });
+
   const { notifications, selectedNotificationId, isLoading } = usePayerStore();
   const selected = notifications.find(n => n.id === selectedNotificationId);
   const prevNotifications = useRef(notifications);
@@ -38,6 +58,7 @@ export function PayerView() {
   };
 
   const pendingCount = notifications.filter(n => n.status === "pending_ack").length;
+  const busy = isLoading || payerOp.isPending;
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
@@ -104,20 +125,22 @@ export function PayerView() {
 
                         {n.status === "pending_ack" && (
                           <FintechButton
-                            onClick={(e) => { e.stopPropagation(); PayerActions.acknowledgeAssignment(n.id); }}
-                            disabled={isLoading}
-                            className="w-full"
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); payerOp.mutate({ kind: "ack", id: n.id }); }}
+                            disabled={busy}
+                            className="w-full min-h-[44px]"
                           >
-                            {isLoading ? <LoadingSpinner size="sm" label="Procesando..." /> : <><FileText className="size-4" /> Confirmar Recepción de Cesión</>}
+                            {busy ? <LoadingSpinner size="sm" label="Procesando..." /> : <><FileText className="size-4" /> Confirmar Recepción de Cesión</>}
                           </FintechButton>
                         )}
                         {n.status === "acknowledged" && (
                           <FintechButton
-                            onClick={(e) => { e.stopPropagation(); PayerActions.confirmPayment(n.id); }}
-                            disabled={isLoading}
-                            className="w-full"
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); payerOp.mutate({ kind: "pay", id: n.id }); }}
+                            disabled={busy}
+                            className="w-full min-h-[44px]"
                           >
-                            {isLoading ? <LoadingSpinner size="sm" label="Procesando pago..." /> : <><DollarSign className="size-4" /> Confirmar Pago al Factor</>}
+                            {busy ? <LoadingSpinner size="sm" label="Procesando pago..." /> : <><DollarSign className="size-4" /> Confirmar Pago al Factor</>}
                           </FintechButton>
                         )}
                         {n.status === "paid" && (

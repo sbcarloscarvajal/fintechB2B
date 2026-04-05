@@ -1,7 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
 import { InvoiceWizard } from "@/components/InvoiceWizard";
 import { DianFeedback } from "@/components/DianFeedback";
 import { FintechButton } from "@/components/FintechButton";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { mockDianApi } from "@/api/mockDianApi";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { WizardActions } from "@/flux/actions";
 import { useWizardStore } from "@/flux/useStore";
@@ -9,6 +11,18 @@ import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 
 export function WizardView() {
+  const finalizeOffer = useMutation({
+    mutationFn: () => mockDianApi.completeWizardOffer(),
+    onMutate: () => WizardActions.submitPending(),
+    onSuccess: () => WizardActions.submitSuccess(),
+    onError: () => {
+      WizardActions.submitFail();
+      toast.error("No pudimos completar la oferta", {
+        description: "Revisa tu conexión e inténtalo de nuevo.",
+      });
+    },
+  });
+
   const { state } = useWizardStore();
   const prevComplete = useRef(state.isComplete);
 
@@ -54,7 +68,7 @@ export function WizardView() {
             </div>
           </div>
         ) : (
-          <InvoiceWizard onComplete={() => WizardActions.complete()} />
+          <InvoiceWizard onFinalizeOffer={() => finalizeOffer.mutate()} />
         )}
       </div>
     </div>

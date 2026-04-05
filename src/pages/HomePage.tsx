@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Building2, Users, Briefcase } from "lucide-react";
+import { Building2, Users, Briefcase, Sparkles } from "lucide-react";
 
 export function HomePage() {
   const roles = [
@@ -9,6 +9,13 @@ export function HomePage() {
       title: "Proveedor",
       subtitle: "Pymes y Emprendedores",
       desc: "Oferta tus facturas de manera sencilla y obtén liquidez inmediata.",
+    },
+    {
+      to: "/wizard",
+      icon: Sparkles,
+      title: "Wizard (Ley de Miller)",
+      subtitle: "Proveedor — pasos guiados",
+      desc: "Oferta segmentada en 3 pasos con barra de progreso, como define la actividad sumativa.",
     },
     {
       to: "/factor",
@@ -28,7 +35,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
+      <div className="max-w-5xl w-full">
         <div className="text-center mb-12">
           <div className="inline-flex size-16 rounded-2xl items-center justify-center mb-4 bg-fintech-institutional">
             <Building2 className="size-8 text-primary-foreground" />
@@ -42,7 +49,7 @@ export function HomePage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {roles.map((role) => (
             <Link
               key={role.to}

@@ -15,10 +15,11 @@ const steps = [
 ];
 
 interface InvoiceWizardProps {
-  onComplete?: () => void;
+  /** Oferta final: capa asíncrona (TanStack Query) en el padre; Flux actualiza el store al resolver. */
+  onFinalizeOffer: () => void;
 }
 
-export function InvoiceWizard({ onComplete }: InvoiceWizardProps) {
+export function InvoiceWizard({ onFinalizeOffer }: InvoiceWizardProps) {
   const { state, selectedInvoice } = useWizardStore();
   const { currentStep, selectedInvoiceId, discountRate, acceptTerms } = state;
 
@@ -33,8 +34,7 @@ export function InvoiceWizard({ onComplete }: InvoiceWizardProps) {
   };
 
   const handleSubmit = () => {
-    WizardActions.complete();
-    onComplete?.();
+    onFinalizeOffer();
   };
 
   return (
@@ -80,8 +80,8 @@ export function InvoiceWizard({ onComplete }: InvoiceWizardProps) {
       <div className="p-8 min-h-[400px]">
         {currentStep === 1 && (
           <div>
-            <h2 className="text-2xl mb-2">Paso 1: Selecciona la factura</h2>
-            <p className="text-muted-foreground mb-6">Elige la factura que deseas ofertar a los factores</p>
+            <h2 className="text-2xl font-semibold mb-2">Paso 1: Selecciona la factura</h2>
+            <p className="text-muted-foreground mb-6">Elige la factura que deseas ofertar a los factores (Ley de Miller: un paso, poca carga cognitiva).</p>
             <div className="space-y-3">
               {wizardInvoices.map((invoice) => (
                 <label
@@ -103,11 +103,11 @@ export function InvoiceWizard({ onComplete }: InvoiceWizardProps) {
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-fintech-institutional">Factura {invoice.id}</p>
+                        <p className="font-semibold text-fintech-institutional">Factura {invoice.id}</p>
                         <p className="text-sm text-muted-foreground">{invoice.payer}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg">{formatCurrency(invoice.amount)}</p>
+                        <p className="text-lg font-semibold">{formatCurrency(invoice.amount)}</p>
                         <p className="text-xs text-muted-foreground">
                           Vence: {new Date(invoice.dueDate).toLocaleDateString("es-CO")}
                         </p>
@@ -122,11 +122,11 @@ export function InvoiceWizard({ onComplete }: InvoiceWizardProps) {
 
         {currentStep === 2 && selectedInvoice && (
           <div>
-            <h2 className="text-2xl mb-2">Paso 2: Define las condiciones</h2>
-            <p className="text-muted-foreground mb-6">Configura los términos de tu oferta</p>
+            <h2 className="text-2xl font-semibold mb-2">Paso 2: Define las condiciones</h2>
+            <p className="text-muted-foreground mb-6">Configura los términos de tu oferta.</p>
             <div className="bg-accent rounded-lg p-4 mb-6">
               <p className="text-sm text-muted-foreground mb-1">Factura seleccionada</p>
-              <p className="text-lg text-fintech-institutional">{selectedInvoice.id} - {formatCurrency(selectedInvoice.amount)}</p>
+              <p className="text-lg font-semibold text-fintech-institutional">{selectedInvoice.id} — {formatCurrency(selectedInvoice.amount)}</p>
             </div>
             <div className="space-y-6">
               <div>
@@ -164,8 +164,8 @@ export function InvoiceWizard({ onComplete }: InvoiceWizardProps) {
 
         {currentStep === 3 && selectedInvoice && (
           <div>
-            <h2 className="text-2xl mb-2">Paso 3: Firma y confirmación DIAN</h2>
-            <p className="text-muted-foreground mb-6">Revisa y confirma la información antes de ofertar</p>
+            <h2 className="text-2xl font-semibold mb-2">Paso 3: Firma y confirmación DIAN</h2>
+            <p className="text-muted-foreground mb-6">Revisa y confirma la información antes de ofertar.</p>
             <DianFeedback type="processing" message="La factura está lista para ser validada ante la DIAN." className="mb-6" />
             <div className="bg-accent rounded-lg p-6 mb-6">
               <p className="text-sm text-muted-foreground mb-4">Resumen de la oferta</p>

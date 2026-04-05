@@ -10,12 +10,16 @@ import { WizardView } from "@/pages/WizardView";
 import { PayerView } from "@/pages/PayerView";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations: { retry: 1 },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Sonner position="top-center" />
+      <Sonner position="top-center" richColors />
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>

@@ -11,11 +11,23 @@ export const InvoiceActions = {
   setFilter: (filter: "all" | "low" | "medium" | "high") => {
     AppDispatcher.dispatch({ type: ActionTypes.SET_FILTER, payload: filter });
   },
+  setSearch: (query: string) => {
+    AppDispatcher.dispatch({ type: ActionTypes.SET_INVOICE_SEARCH, payload: query });
+  },
 };
 
 export const ProviderActions = {
-  submitOffer: () => {
-    AppDispatcher.dispatch({ type: ActionTypes.SUBMIT_OFFER });
+  validationFailed: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.PROVIDER_VALIDATION_FAILED });
+  },
+  submitPending: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.PROVIDER_SUBMIT_PENDING });
+  },
+  submitSuccess: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.PROVIDER_SUBMIT_SUCCESS });
+  },
+  submitFail: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.PROVIDER_SUBMIT_FAIL });
   },
   resetOffer: () => {
     AppDispatcher.dispatch({ type: ActionTypes.RESET_OFFER });
@@ -44,8 +56,14 @@ export const WizardActions = {
   acceptTerms: (accepted: boolean) => {
     AppDispatcher.dispatch({ type: ActionTypes.WIZARD_ACCEPT_TERMS, payload: accepted });
   },
-  complete: () => {
-    AppDispatcher.dispatch({ type: ActionTypes.WIZARD_COMPLETE });
+  submitPending: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.WIZARD_SUBMIT_PENDING });
+  },
+  submitSuccess: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.WIZARD_SUBMIT_SUCCESS });
+  },
+  submitFail: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.WIZARD_SUBMIT_FAIL });
   },
   reset: () => {
     AppDispatcher.dispatch({ type: ActionTypes.WIZARD_RESET });
@@ -53,8 +71,14 @@ export const WizardActions = {
 };
 
 export const AssignmentActions = {
-  accept: () => {
-    AppDispatcher.dispatch({ type: ActionTypes.ACCEPT_ASSIGNMENT });
+  submitPending: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.ASSIGNMENT_SUBMIT_PENDING });
+  },
+  submitSuccess: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.ASSIGNMENT_SUBMIT_SUCCESS });
+  },
+  submitFail: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.ASSIGNMENT_SUBMIT_FAIL });
   },
   reset: () => {
     AppDispatcher.dispatch({ type: ActionTypes.RESET_ASSIGNMENT });
@@ -68,10 +92,16 @@ export const PayerActions = {
   clearNotification: () => {
     AppDispatcher.dispatch({ type: ActionTypes.CLEAR_PAYER_NOTIFICATION });
   },
-  acknowledgeAssignment: (notificationId: string) => {
-    AppDispatcher.dispatch({ type: ActionTypes.ACKNOWLEDGE_ASSIGNMENT, payload: notificationId });
+  opPending: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.PAYER_OP_PENDING });
   },
-  confirmPayment: (notificationId: string) => {
-    AppDispatcher.dispatch({ type: ActionTypes.CONFIRM_PAYMENT, payload: notificationId });
+  opReset: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.PAYER_OP_RESET });
+  },
+  ackSuccess: (notificationId: string) => {
+    AppDispatcher.dispatch({ type: ActionTypes.PAYER_ACK_SUCCESS, payload: notificationId });
+  },
+  paySuccess: (notificationId: string) => {
+    AppDispatcher.dispatch({ type: ActionTypes.PAYER_PAY_SUCCESS, payload: notificationId });
   },
 };

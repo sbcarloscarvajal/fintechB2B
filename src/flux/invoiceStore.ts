@@ -26,6 +26,7 @@ export interface InvoiceStoreState {
   invoices: Invoice[];
   selectedInvoiceId: string | null;
   filter: "all" | "low" | "medium" | "high";
+  searchQuery: string;
   filteredInvoices: Invoice[];
   selectedInvoice: Invoice | null;
 }
@@ -86,6 +87,7 @@ class InvoiceStore {
       invoices: mockInvoices,
       selectedInvoiceId: null,
       filter: "all",
+      searchQuery: "",
       filteredInvoices: filtered,
       selectedInvoice: null,
     };
@@ -127,10 +129,19 @@ class InvoiceStore {
   }
 
   private recomputeDerived() {
-    const { invoices, filter, selectedInvoiceId } = this._invoiceState;
-    const filteredInvoices = filter === "all" ? invoices : invoices.filter(inv => inv.risk === filter);
+    const { invoices, filter, selectedInvoiceId, searchQuery } = this._invoiceState;
+    let list = filter === "all" ? invoices : invoices.filter(inv => inv.risk === filter);
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        inv =>
+          inv.id.toLowerCase().includes(q) ||
+          inv.provider.toLowerCase().includes(q) ||
+          inv.payer.toLowerCase().includes(q)
+      );
+    }
     const selectedInvoice = invoices.find(inv => inv.id === selectedInvoiceId) || null;
-    this._invoiceState = { ...this._invoiceState, filteredInvoices, selectedInvoice };
+    this._invoiceState = { ...this._invoiceState, filteredInvoices: list, selectedInvoice };
   }
 
   private handleAction(action: FluxAction) {
@@ -147,21 +158,29 @@ class InvoiceStore {
         this._invoiceState = { ...this._invoiceState, filter: action.payload };
         this.recomputeDerived();
         break;
+      case ActionTypes.SET_INVOICE_SEARCH:
+        this._invoiceState = { ...this._invoiceState, searchQuery: action.payload ?? "" };
+        this.recomputeDerived();
+        break;
 
-      case ActionTypes.SUBMIT_OFFER:
-        if (!this._providerState.isSigned) {
-          this._providerState = { ...this._providerState, showError: true };
-          setTimeout(() => {
-            this._providerState = { ...this._providerState, showError: false };
-            this.emitChange();
-          }, 5000);
-        } else {
-          this._providerState = { ...this._providerState, isLoading: true };
-          setTimeout(() => {
-            this._providerState = { ...this._providerState, isLoading: false, isSubmitted: true };
-            this.emitChange();
-          }, 1500);
-        }
+      case ActionTypes.PROVIDER_VALIDATION_FAILED:
+        this._providerState = { ...this._providerState, showError: true };
+        setTimeout(() => {
+          this._providerState = { ...this._providerState, showError: false };
+          this.emitChange();
+        }, 5000);
+        break;
+      case ActionTypes.PROVIDER_CLEAR_VALIDATION_ERROR:
+        this._providerState = { ...this._providerState, showError: false };
+        break;
+      case ActionTypes.PROVIDER_SUBMIT_PENDING:
+        this._providerState = { ...this._providerState, isLoading: true, showError: false };
+        break;
+      case ActionTypes.PROVIDER_SUBMIT_SUCCESS:
+        this._providerState = { ...this._providerState, isLoading: false, isSubmitted: true };
+        break;
+      case ActionTypes.PROVIDER_SUBMIT_FAIL:
+        this._providerState = { ...this._providerState, isLoading: false };
         break;
       case ActionTypes.RESET_OFFER:
         this._providerState = { isSubmitted: false, showError: false, isSigned: false, showAdditionalOptions: false, isLoading: false };
@@ -190,23 +209,27 @@ class InvoiceStore {
       case ActionTypes.WIZARD_ACCEPT_TERMS:
         this._wizardState = { ...this._wizardState, acceptTerms: action.payload };
         break;
-      case ActionTypes.WIZARD_COMPLETE:
+      case ActionTypes.WIZARD_SUBMIT_PENDING:
         this._wizardState = { ...this._wizardState, isLoading: true };
-        setTimeout(() => {
-          this._wizardState = { ...this._wizardState, isLoading: false, isComplete: true };
-          this.emitChange();
-        }, 1500);
+        break;
+      case ActionTypes.WIZARD_SUBMIT_SUCCESS:
+        this._wizardState = { ...this._wizardState, isLoading: false, isComplete: true };
+        break;
+      case ActionTypes.WIZARD_SUBMIT_FAIL:
+        this._wizardState = { ...this._wizardState, isLoading: false };
         break;
       case ActionTypes.WIZARD_RESET:
         this._wizardState = { currentStep: 1, selectedInvoiceId: null, discountRate: "2.5", acceptTerms: false, isComplete: false, isLoading: false };
         break;
 
-      case ActionTypes.ACCEPT_ASSIGNMENT:
+      case ActionTypes.ASSIGNMENT_SUBMIT_PENDING:
         this._assignmentState = { ...this._assignmentState, isLoading: true };
-        setTimeout(() => {
-          this._assignmentState = { isAccepted: true, isLoading: false };
-          this.emitChange();
-        }, 1500);
+        break;
+      case ActionTypes.ASSIGNMENT_SUBMIT_SUCCESS:
+        this._assignmentState = { isAccepted: true, isLoading: false };
+        break;
+      case ActionTypes.ASSIGNMENT_SUBMIT_FAIL:
+        this._assignmentState = { ...this._assignmentState, isLoading: false };
         break;
       case ActionTypes.RESET_ASSIGNMENT:
         this._assignmentState = { isAccepted: false, isLoading: false };
@@ -218,26 +241,28 @@ class InvoiceStore {
       case ActionTypes.CLEAR_PAYER_NOTIFICATION:
         this._payerState = { ...this._payerState, selectedNotificationId: null };
         break;
-      case ActionTypes.ACKNOWLEDGE_ASSIGNMENT:
+      case ActionTypes.PAYER_OP_PENDING:
         this._payerState = { ...this._payerState, isLoading: true };
-        setTimeout(() => {
-          const notifications = this._payerState.notifications.map(n =>
-            n.id === action.payload ? { ...n, status: "acknowledged" as const, message: "Cesión confirmada. El pago debe realizarse al factor antes del vencimiento." } : n
-          );
-          this._payerState = { ...this._payerState, notifications, isLoading: false };
-          this.emitChange();
-        }, 1500);
         break;
-      case ActionTypes.CONFIRM_PAYMENT:
-        this._payerState = { ...this._payerState, isLoading: true };
-        setTimeout(() => {
-          const notifications = this._payerState.notifications.map(n =>
-            n.id === action.payload ? { ...n, status: "paid" as const, message: "Pago confirmado exitosamente al factor." } : n
-          );
-          this._payerState = { ...this._payerState, notifications, isLoading: false };
-          this.emitChange();
-        }, 1500);
+      case ActionTypes.PAYER_OP_RESET:
+        this._payerState = { ...this._payerState, isLoading: false };
         break;
+      case ActionTypes.PAYER_ACK_SUCCESS: {
+        const id = action.payload as string;
+        const notifications = this._payerState.notifications.map(n =>
+          n.id === id ? { ...n, status: "acknowledged" as const, message: "Cesión confirmada. El pago debe realizarse al factor antes del vencimiento." } : n
+        );
+        this._payerState = { ...this._payerState, notifications, isLoading: false };
+        break;
+      }
+      case ActionTypes.PAYER_PAY_SUCCESS: {
+        const id = action.payload as string;
+        const notifications = this._payerState.notifications.map(n =>
+          n.id === id ? { ...n, status: "paid" as const, message: "Pago confirmado exitosamente al factor." } : n
+        );
+        this._payerState = { ...this._payerState, notifications, isLoading: false };
+        break;
+      }
       default:
         return;
     }
