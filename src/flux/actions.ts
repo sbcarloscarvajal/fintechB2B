@@ -60,3 +60,18 @@ export const AssignmentActions = {
     AppDispatcher.dispatch({ type: ActionTypes.RESET_ASSIGNMENT });
   },
 };
+
+export const PayerActions = {
+  selectNotification: (id: string) => {
+    AppDispatcher.dispatch({ type: ActionTypes.SELECT_PAYER_NOTIFICATION, payload: id });
+  },
+  clearNotification: () => {
+    AppDispatcher.dispatch({ type: ActionTypes.CLEAR_PAYER_NOTIFICATION });
+  },
+  acknowledgeAssignment: (notificationId: string) => {
+    AppDispatcher.dispatch({ type: ActionTypes.ACKNOWLEDGE_ASSIGNMENT, payload: notificationId });
+  },
+  confirmPayment: (notificationId: string) => {
+    AppDispatcher.dispatch({ type: ActionTypes.CONFIRM_PAYMENT, payload: notificationId });
+  },
+};
