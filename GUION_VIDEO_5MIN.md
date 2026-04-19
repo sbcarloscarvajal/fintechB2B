@@ -29,11 +29,13 @@
 ## 🎬 BLOQUE 2 — Patrón Flux (0:30 – 1:30)
 
 **[PANTALLA]** Sigue en el navegador, página de inicio.
-**[ACCIÓN]** Mientras hablas, señala las tarjetas al mencionar "vista".
+**[ACCIÓN]** Señala una tarjeta al decir "vista".
 
-> "Flux propone **flujo unidireccional de datos**: la vista dispara una **acción**, el **dispatcher** la entrega al **store**, el store actualiza su estado y la vista se re-renderiza.
+> "Flux organiza el estado en **cuatro piezas**: **vista, acción, dispatcher y store**.
 >
-> La diferencia frente al two-way binding o a mutar estado desde cualquier componente es que **el store es la única fuente de verdad** y los cambios pasan siempre por el mismo punto. Esto hace el flujo **predecible y trazable**, algo crítico cuando la app crece."
+> El flujo es siempre el mismo: la vista dispara una **acción**, el **dispatcher** la reparte al **store**, el store actualiza el estado y la vista se re-renderiza.
+>
+> Una sola dirección, un único lugar donde vive el estado. Eso es todo."
 
 ---
 
