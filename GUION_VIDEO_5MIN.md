@@ -18,11 +18,15 @@
 ## 🎬 BLOQUE 1 — Presentación (0:00 – 0:30)
 
 **[PANTALLA]** Navegador en `http://localhost:8080/`.
-**[ACCIÓN]** Pasar el cursor por las tarjetas de perfiles.
+**[ACCIÓN]** Pasar el cursor por las tarjetas de perfiles, una por una.
 
-> "Este es un prototipo de **plataforma fintech B2B** para facturación electrónica con integración DIAN. Tiene tres perfiles: **Proveedor**, **Factor** y **Pagador**.
+> "Hola. Este es un prototipo de **plataforma fintech B2B** para **facturación electrónica con integración DIAN**, el sistema tributario colombiano.
 >
-> El foco del video no es la UI, sino la **arquitectura de estado**: el proyecto implementa el **patrón Flux** de Facebook, con flujo unidireccional."
+> El caso de uso es **factoring**: un proveedor emite una factura, un factor la compra para darle liquidez inmediata, y el pagador confirma la cesión.
+>
+> Por eso la app tiene **cuatro vistas**: **Proveedor**, **Wizard** (la misma operación guiada en pasos), **Factor** y **Pagador**.
+>
+> El foco del video no es la UI, sino la **arquitectura de estado**: el proyecto implementa el **patrón Flux** de Facebook, con flujo unidireccional. Vamos a ver cómo está estructurado y cómo se aplica en cada pantalla."
 
 ---
 
