@@ -36,7 +36,12 @@
 
 ## 🎬 BLOQUE 2 — ¿Qué es Flux? (0:30 – 1:30)
 
-**[ACCIÓN]** Mostrar un diagrama mental o decirlo apuntando con el cursor a una zona vacía.
+**[PANTALLA]** Sigue en el **navegador con la página de inicio** (las 4 tarjetas). NO abras VS Code todavía.
+
+**[ACCIÓN sugerida]** Elige UNA de estas dos opciones para no quedarte con pantalla estática:
+
+- **Opción A (más simple):** Mantén la página de inicio y, mientras nombras cada pieza de Flux (Vista, Acciones, Dispatcher, Store), señala con el cursor las **tarjetas de perfiles** como ejemplo de "vistas" reales de la app.
+- **Opción B (más visual):** Abre en otra pestaña un diagrama del flujo Vista → Acciones → Dispatcher → Store → Vista (puede ser una imagen, una pizarra digital tipo Excalidraw, o incluso un papel frente a la cámara).
 
 > "Flux es un patrón creado por Facebook que impone un **flujo de datos unidireccional**. Tiene cuatro piezas:
 >
