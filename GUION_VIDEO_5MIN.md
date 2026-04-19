@@ -22,11 +22,15 @@
 
 ## 🎬 BLOQUE 1 — Presentación (0:00 – 0:30)
 
-**[ACCIÓN]** Mostrar la pantalla de inicio del proyecto (`/`).
+**[PANTALLA]** Solo el **navegador** en `http://localhost:8080/` mostrando la página de inicio con las tarjetas de Proveedor, Wizard, Factor y Pagador. **NO abras VS Code todavía.**
+
+**[ACCIÓN sugerida]** Mientras hablas, mueve suavemente el cursor por encima de las 4 tarjetas (sin hacer clic) para que el espectador vea los perfiles disponibles.
 
 > "Hola. En este video voy a mostrar el prototipo **Fintech B2B** que desarrollé como una *Single Page Application* en **React con TypeScript**. Es una plataforma de **factoring electrónico** con tres perfiles: **Proveedor**, **Factor** y **Pagador**, e integración simulada con la **DIAN**.
 >
 > Lo más importante: toda la gestión de estado de la aplicación está construida con el **patrón Flux**. Eso es lo que voy a explicar."
+
+> 💡 **Tip:** VS Code lo abres recién en el **Bloque 3** (minuto 1:30). Durante los Bloques 1 y 2 mantén siempre el navegador en pantalla.
 
 ---
 
