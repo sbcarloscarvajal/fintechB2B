@@ -63,35 +63,57 @@
 
 ---
 
-## 🎬 BLOQUE 4 — Demo (2:45 – 4:15)
+## 🎬 BLOQUE 4 — Demo por pantallas (2:45 – 5:30)
+
+### 4.1 Proveedor (2:45 – 3:15)
+
+**[ACCIÓN]** Navegador → `/proveedor`.
+
+> "Vista del **Proveedor**. Aquí se oferta una factura electrónica. El checkbox de acuse dispara `PROVIDER_TOGGLE_SIGNED` y el botón principal dispara `PROVIDER_SUBMIT_PENDING`. La validación previa también es una acción: `PROVIDER_VALIDATION_FAILED`."
+
+**[ACCIÓN]** Marcar el checkbox y pulsar "Ofertar Factura".
+
+> "La llamada a la API mock se hace con `useMutation` de TanStack Query. En `onMutate`, `onSuccess` y `onError` se despachan acciones que mueven el store entre loading, submitted o error."
+
+### 4.2 Wizard (3:15 – 3:50)
+
+**[ACCIÓN]** Navegador → `/wizard`.
+
+> "Misma operación segmentada en **tres pasos**: revisar, configurar y confirmar. Cada paso es una transición en el store: `WIZARD_NEXT_STEP`, `WIZARD_PREV_STEP`, `WIZARD_UPDATE_FIELD`."
+
+**[ACCIÓN]** Avanzar uno o dos pasos.
+
+> "El estado del wizard (paso actual, datos del formulario, factura seleccionada) vive en el store, no en el componente."
+
+### 4.3 Factor (3:50 – 4:35)
 
 **[ACCIÓN]** Navegador → `/factor`.
 
-> "Esta es la vista del Factor. Al escribir en el buscador se dispara la acción `SET_INVOICE_SEARCH`; el store recalcula `filteredInvoices` y la lista se re-renderiza. La vista no filtra: solo consume estado derivado."
+> "Vista del **Factor**: bandeja de facturas disponibles para compra. El buscador dispara `SET_INVOICE_SEARCH`; el store recalcula `filteredInvoices` y la lista se re-renderiza. La vista no filtra, solo consume estado derivado."
 
-**[ACCIÓN]** Escribir en el buscador, abrir una factura, "Aceptar operación".
+**[ACCIÓN]** Escribir en el buscador, abrir una factura, pulsar "Aceptar operación".
 
-> "Aceptar la operación dispara `ASSIGNMENT_SUBMIT_PENDING`. Las llamadas asíncronas se gestionan con **TanStack Query** (`useMutation`); en `onMutate` y `onSuccess` se despachan acciones Flux que actualizan el store. Así combinamos cache de servidor con estado de UI."
+> "Aceptar dispara `ASSIGNMENT_SUBMIT_PENDING`. El store gestiona el ciclo de la cesión: pendiente, aceptada, confirmada."
 
-**[ACCIÓN]** Ir a `/proveedor`, marcar firma, ofertar.
+### 4.4 Pagador (4:35 – 5:10)
 
-> "Mismo patrón en Proveedor: cada interacción es una acción tipada. Si tuviéramos que añadir una nueva funcionalidad, el flujo es siempre: nueva constante en `actionTypes`, manejarla en `handleAction`, exponer creator en `actions.ts`, consumir en la vista."
+**[ACCIÓN]** Navegador → `/pagador`.
+
+> "Vista del **Pagador**: confirma la cesión hacia el factor. Las acciones `PAYER_ACCEPT_ASSIGNMENT` y `PAYER_REJECT_ASSIGNMENT` cierran el ciclo del documento."
+
+**[ACCIÓN]** Aceptar o rechazar una cesión.
+
+> "Las tres vistas comparten el **mismo store**. Cualquier cambio se refleja en todas porque la fuente de verdad es única."
 
 ---
 
-## 🎬 BLOQUE 5 — Cierre (4:15 – 5:00)
+## 🎬 BLOQUE 5 — Cierre (5:10 – 5:30)
 
-**[ACCIÓN]** Volver a la home o a VS Code.
+**[ACCIÓN]** Volver a la home.
 
-> "Resumen de por qué Flux en este proyecto:
+> "Para añadir una funcionalidad nueva el flujo es siempre el mismo: constante en `actionTypes`, caso en `handleAction`, creator en `actions.ts`, consumir en la vista.
 >
-> **Predecibilidad**: un solo camino de mutación, fácil de depurar.
->
-> **Separación de responsabilidades**: vista renderiza, acciones describen intención, store concentra lógica.
->
-> **Escalabilidad**: agregar features se reduce a añadir acciones y casos en el reducer, sin tocar lo existente.
->
-> Gracias."
+> Flux nos da **predecibilidad, responsabilidades separadas y un estado fácil de trazar**. Gracias."
 
 **[ACCIÓN]** Detener grabación.
 
@@ -104,8 +126,11 @@
 | 0:00 – 0:30 | Presentación | Navegador `/` |
 | 0:30 – 1:30 | Patrón Flux | Navegador `/` |
 | 1:30 – 2:45 | Código | VS Code: `src/flux/` |
-| 2:45 – 4:15 | Demo | Navegador `/factor` y `/proveedor` |
-| 4:15 – 5:00 | Cierre | Navegador o VS Code |
+| 2:45 – 3:15 | Demo Proveedor | Navegador `/proveedor` |
+| 3:15 – 3:50 | Demo Wizard | Navegador `/wizard` |
+| 3:50 – 4:35 | Demo Factor | Navegador `/factor` |
+| 4:35 – 5:10 | Demo Pagador | Navegador `/pagador` |
+| 5:10 – 5:30 | Cierre | Navegador `/` |
 
 ---
 
