@@ -1,102 +1,97 @@
 # 🎬 Guion Video Explicativo (5 minutos)
 ### Prototipo Fintech B2B — Patrón Flux
 
-> **Cómo usarlo:** lee en voz alta los bloques en gris. Los **[ACCIÓN]** son lo que muestras en pantalla. Habla tranquilo, sin apuro.
+> **Audiencia:** perfil técnico (devs / estudiantes de informática). Lenguaje técnico básico, directo, sin metáforas innecesarias.
+> **Cómo usarlo:** lee los bloques en gris como apoyo, no literal. Los **[ACCIÓN]** indican qué mostrar en pantalla.
 
 ---
 
 ## ⏱️ Antes de grabar (1 minuto)
 
 - [ ] `npm run dev` y abrir `http://localhost:8080`.
-- [ ] Tener VS Code abierto con `src/flux/` visible (lo usarás en el Bloque 3).
-- [ ] Silenciar notificaciones y celular.
-- [ ] Probar el micrófono.
+- [ ] VS Code abierto con `src/flux/` visible.
+- [ ] Silenciar notificaciones.
+- [ ] Probar micrófono.
 
 ---
 
 ## 🎬 BLOQUE 1 — Presentación (0:00 – 0:30)
 
-**[PANTALLA]** Navegador en `http://localhost:8080/` con las 4 tarjetas de perfiles.
+**[PANTALLA]** Navegador en `http://localhost:8080/`.
+**[ACCIÓN]** Pasar el cursor por las tarjetas de perfiles.
 
-**[ACCIÓN]** Pasa el cursor suavemente por encima de las tarjetas mientras hablas.
-
-> "Hola. Te voy a mostrar un prototipo de **plataforma fintech para facturas electrónicas**, con tres perfiles: **Proveedor**, **Factor** y **Pagador**.
+> "Este es un prototipo de **plataforma fintech B2B** para facturación electrónica con integración DIAN. Tiene tres perfiles: **Proveedor**, **Factor** y **Pagador**.
 >
-> Lo interesante no es solo lo que hace, sino **cómo está organizada por dentro**: usa un patrón llamado **Flux** para manejar toda la información de la app de forma ordenada. Eso es lo que voy a explicarte."
+> El foco del video no es la UI, sino la **arquitectura de estado**: el proyecto implementa el **patrón Flux** de Facebook, con flujo unidireccional."
 
 ---
 
-## 🎬 BLOQUE 2 — ¿Qué es Flux? (0:30 – 1:30)
+## 🎬 BLOQUE 2 — Patrón Flux (0:30 – 1:30)
 
-**[PANTALLA]** Sigue en el navegador con la página de inicio.
+**[PANTALLA]** Sigue en el navegador, página de inicio.
+**[ACCIÓN]** Mientras hablas, señala las tarjetas al mencionar "vista".
 
-**[ACCIÓN]** Mientras hablas, señala las tarjetas con el cursor cuando menciones "vista".
-
-> "Flux es una forma de organizar una aplicación para que **los datos viajen siempre en una sola dirección**. Imagínalo como una calle de un solo sentido:
+> "Flux propone **flujo unidireccional de datos**: la vista dispara una **acción**, el **dispatcher** la entrega al **store**, el store actualiza su estado y la vista se re-renderiza.
 >
-> El **usuario hace clic** en algo (eso es la **vista**) → se dispara una **acción** que dice qué quiere hacer → la acción llega a un **lugar central** que guarda toda la información de la app → ese lugar actualiza los datos → y la pantalla se refresca sola.
->
-> ¿Por qué importa? Porque en apps grandes, si cualquier parte puede cambiar los datos desde cualquier lado, **se vuelve un caos**. Con Flux, todos los cambios pasan por el mismo camino, así es **fácil saber qué pasó y por qué**."
+> La diferencia frente al two-way binding o a mutar estado desde cualquier componente es que **el store es la única fuente de verdad** y los cambios pasan siempre por el mismo punto. Esto hace el flujo **predecible y trazable**, algo crítico cuando la app crece."
 
 ---
 
-## 🎬 BLOQUE 3 — Cómo está organizado el código (1:30 – 2:45)
+## 🎬 BLOQUE 3 — Estructura del código (1:30 – 2:45)
 
-**[ACCIÓN]** Cambia a VS Code y muestra la carpeta `src/flux/`.
+**[ACCIÓN]** Cambiar a VS Code, abrir `src/flux/`.
 
-> "Toda esta lógica vive en una sola carpeta: `src/flux/`. Y cada archivo tiene **una responsabilidad clara**."
+> "Toda la capa Flux vive en `src/flux/`, separada por responsabilidad."
 
-**[ACCIÓN]** Click en `actions.ts`.
+**[ACCIÓN]** Abrir `actionTypes.ts` y `actions.ts`.
 
-> "Aquí están las **acciones**: cosas como 'ofertar factura', 'aceptar operación', 'buscar'. Cada acción describe **qué quiere hacer el usuario**, nada más."
+> "`actionTypes.ts` define las constantes de tipo. `actions.ts` expone los **action creators**: funciones que construyen el objeto `{ type, payload }` y lo envían al dispatcher. La vista solo invoca estos creators, nunca toca el estado directamente."
 
-**[ACCIÓN]** Click en `invoiceStore.ts` y haz scroll rápido.
+**[ACCIÓN]** Abrir `dispatcher.ts`.
 
-> "Aquí está el **almacén central**: guarda toda la información de la app —las facturas, quién está conectado, qué se está buscando— y decide cómo cambiar los datos cuando llega una acción. Es **el único lugar** donde se modifica la información."
+> "El **dispatcher** es un singleton minimalista: registra callbacks y reenvía cada acción a todos los suscriptores. Garantiza un único punto de entrada."
 
-**[ACCIÓN]** Click en `dispatcher.ts` (mostrar que es muy corto).
+**[ACCIÓN]** Abrir `invoiceStore.ts`, scroll por `handleAction`.
 
-> "Y este es el **repartidor**: recibe las acciones y las lleva al almacén. Es pequeño pero clave, porque garantiza que todo pase por el mismo camino."
+> "El **store** mantiene el estado y reduce las acciones a un nuevo estado de forma inmutable. Aquí viven las reglas de negocio: filtrado de facturas, transiciones del wizard, ciclo de la cesión, etc."
 
-> "Resumen: la vista pide, la acción describe, el repartidor entrega, y el almacén guarda. Eso es todo."
+**[ACCIÓN]** Abrir `useStore.ts`.
+
+> "`useStore.ts` conecta el store con React vía `useSyncExternalStore`, compatible con React 18 y concurrent rendering."
 
 ---
 
-## 🎬 BLOQUE 4 — Demo en vivo (2:45 – 4:15)
+## 🎬 BLOQUE 4 — Demo (2:45 – 4:15)
 
-**[ACCIÓN]** Vuelve al navegador, entra a `/factor`.
+**[ACCIÓN]** Navegador → `/factor`.
 
-> "Veámoslo funcionando. Esta es la vista del **Factor**, que evalúa facturas para comprarlas."
+> "Esta es la vista del Factor. Al escribir en el buscador se dispara la acción `SET_INVOICE_SEARCH`; el store recalcula `filteredInvoices` y la lista se re-renderiza. La vista no filtra: solo consume estado derivado."
 
-**[ACCIÓN]** Escribe en el buscador.
+**[ACCIÓN]** Escribir en el buscador, abrir una factura, "Aceptar operación".
 
-> "Cuando escribo aquí, **no estoy tocando los datos directamente**. Lo que pasa es que se dispara una acción de 'buscar', viaja al almacén, el almacén filtra la lista y la pantalla se actualiza sola. Limpio y predecible."
+> "Aceptar la operación dispara `ASSIGNMENT_SUBMIT_PENDING`. Las llamadas asíncronas se gestionan con **TanStack Query** (`useMutation`); en `onMutate` y `onSuccess` se despachan acciones Flux que actualizan el store. Así combinamos cache de servidor con estado de UI."
 
-**[ACCIÓN]** Click en una factura → "Aceptar operación".
+**[ACCIÓN]** Ir a `/proveedor`, marcar firma, ofertar.
 
-> "Ahora acepto una operación. Mismo flujo: una acción dice 'aceptar', el almacén la procesa y la pantalla muestra el resultado. Yo como desarrollador **nunca cambio los datos a mano**."
-
-**[ACCIÓN]** Ir a `/proveedor`, marcar la firma y ofertar.
-
-> "En el perfil del Proveedor pasa lo mismo: marco la firma, oferto la factura, y cada interacción es una acción que sigue el mismo camino."
+> "Mismo patrón en Proveedor: cada interacción es una acción tipada. Si tuviéramos que añadir una nueva funcionalidad, el flujo es siempre: nueva constante en `actionTypes`, manejarla en `handleAction`, exponer creator en `actions.ts`, consumir en la vista."
 
 ---
 
 ## 🎬 BLOQUE 5 — Cierre (4:15 – 5:00)
 
-**[ACCIÓN]** Vuelve a la página de inicio o a VS Code, lo que prefieras.
+**[ACCIÓN]** Volver a la home o a VS Code.
 
-> "Para cerrar, ¿qué ganamos usando Flux en este proyecto?
+> "Resumen de por qué Flux en este proyecto:
 >
-> **Primero, orden**: todo cambio pasa por el mismo camino, así sé exactamente qué está pasando.
+> **Predecibilidad**: un solo camino de mutación, fácil de depurar.
 >
-> **Segundo, cada parte hace lo suyo**: la pantalla muestra, las acciones piden, el almacén decide.
+> **Separación de responsabilidades**: vista renderiza, acciones describen intención, store concentra lógica.
 >
-> **Tercero, es fácil crecer**: si quiero agregar una función nueva, solo creo una acción más. No tengo que reescribir nada.
+> **Escalabilidad**: agregar features se reduce a añadir acciones y casos en el reducer, sin tocar lo existente.
 >
-> Eso es todo. Una app organizada, predecible y fácil de mantener. Gracias por ver el video."
+> Gracias."
 
-**[ACCIÓN]** Detener la grabación.
+**[ACCIÓN]** Detener grabación.
 
 ---
 
@@ -105,7 +100,7 @@
 | Tiempo | Bloque | Pantalla |
 |--------|--------|----------|
 | 0:00 – 0:30 | Presentación | Navegador `/` |
-| 0:30 – 1:30 | ¿Qué es Flux? | Navegador `/` |
+| 0:30 – 1:30 | Patrón Flux | Navegador `/` |
 | 1:30 – 2:45 | Código | VS Code: `src/flux/` |
 | 2:45 – 4:15 | Demo | Navegador `/factor` y `/proveedor` |
 | 4:15 – 5:00 | Cierre | Navegador o VS Code |
@@ -114,19 +109,17 @@
 
 ## 🎙️ Tips de grabación
 
-- **Habla más lento de lo que crees** — al revisar siempre suena rápido.
-- **Pausa medio segundo** entre bloque y bloque (ayuda al editar).
-- **No leas literal** — usa el guion como apoyo.
-- Si te equivocas, **espera 2 segundos en silencio** y repite la frase.
-- Resolución recomendada: **1280×720** o **1920×1080** a 30 fps.
+- Habla a ritmo natural, sin acelerar.
+- Pausa medio segundo entre bloques (facilita edición).
+- No leas literal — usa el guion como apoyo.
+- Resolución: **1280×720** o **1920×1080** a 30 fps.
 
 ---
 
 ## 🛠️ Atajos útiles
 
 ```bash
-# Levantar la app antes de grabar
 npm run dev
 ```
 
-> Grabación: **OBS Studio** (recomendado), **Win + G** (Game Bar), **QuickTime** (macOS).
+> Grabación: **OBS Studio**, **Win + G** (Game Bar) o **QuickTime** (macOS).
