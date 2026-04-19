@@ -28,14 +28,24 @@
 
 ## 🎬 BLOQUE 2 — Patrón Flux (0:30 – 1:30)
 
-**[PANTALLA]** Sigue en el navegador, página de inicio.
+**[PANTALLA]** Navegador, página de inicio.
 **[ACCIÓN]** Señala una tarjeta al decir "vista".
 
-> "Flux organiza el estado en **cuatro piezas**: **vista, acción, dispatcher y store**.
+> "Flux es un patrón de arquitectura para gestionar el estado de la aplicación. Lo componen **cuatro piezas** con responsabilidades bien definidas:
 >
-> El flujo es siempre el mismo: la vista dispara una **acción**, el **dispatcher** la reparte al **store**, el store actualiza el estado y la vista se re-renderiza.
+> **1. Vista:** los componentes React. Renderizan el estado y capturan la interacción del usuario. No mutan datos, solo disparan acciones.
 >
-> Una sola dirección, un único lugar donde vive el estado. Eso es todo."
+> **2. Acción:** un objeto plano `{ type, payload }` que describe **qué pasó**. El `type` es una constante; el `payload` lleva los datos. Las crea un *action creator*.
+>
+> **3. Dispatcher:** un singleton que recibe las acciones y las **reparte a todos los stores** registrados. Es el único punto de entrada al estado.
+>
+> **4. Store:** mantiene el estado y la lógica de negocio. Recibe la acción, calcula el nuevo estado de forma **inmutable** y notifica a las vistas suscritas para que se re-rendericen."
+
+**[ACCIÓN]** Mueve la mano describiendo un círculo al explicar el flujo.
+
+> "El ciclo es **unidireccional**: vista → acción → dispatcher → store → vista. Los datos siempre viajan en la misma dirección, nunca al revés.
+>
+> Esto nos da tres ventajas concretas: el estado vive en **un único lugar**, cada cambio queda **trazado** como una acción, y la lógica de negocio queda **fuera de los componentes**."
 
 ---
 
